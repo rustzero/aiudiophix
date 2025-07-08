@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Aiudiophix - Match Wizard</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      background-color: black;
+      color: #00ff88;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+    select, label, input {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      display: block;
+      background: #111;
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      padding: 0.25rem;
+    }
+    .match {
+      background-color: #222;
+      border: 1px solid orange;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .trust-badge {
+      display: inline-block;
+      background: #0033ff;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      margin-left: 0.5rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+    .safe { color: #00ff88; }
+    .warn { color: #ffaa00; }
+    .danger { color: #ff0033; }
+  </style>
+</head>
+<body>
+  <!--
+    short_description: Smart car audio match wizard for amps, subs, wiring & safety.
+    long_description: Aiudiophix is the ultimate AI-powered wizard for car audio enthusiasts. Match your amps, subs, wiring, and safety gear with pro-level confidence. Backed by real RMS logic, trust scores, and Nova's legendary Pro Tips, Aiudiophix is your co-pilot on the road to perfect sound.
+    Features:
+    - Match amplifiers to subwoofers with safety analysis
+    - Learn wire size, fuse size, and box requirements
+    - Avoid clipping, overpowering, and mismatches
+    - Designed with beginners and pros in mind
+    - Offline-ready, no tracking, no BS
+
+    Privacy Policy:
+    Aiudiophix does not collect any user data. The app is designed for offline use and does not access location, contacts, or any private information.
+    If affiliate links are used in the future, they will be clearly marked, and no tracking will be used without your consent.
+    Contact: aiudiophix@protonmail.com
+  -->
+
+  <div id="root"></div>
+  <script type="text/babel">
+    const brands = {
+      "Sundown Audio": {
+        trust: 10,
+        color: "#ff9900",
+        amps: {
+          "SAZ-1500D": { rms: 1500, ohm: 1, class: "D", spec: "1/0 ga, 150A" },
+          "SCV-2000D": { rms: 2000, ohm: 1, class: "D", spec: "1/0 ga, 200A" }
+        },
+        subs: {
+          "X-12 D2": { rms: 1500, ohm: 1, voice: "Dual 2Ω" },
+          "SA-15 D4": { rms: 1000, ohm: 2, voice: "Dual 4Ω" }
+        }
+      },
+      "Kicker": {
+        trust: 9,
+        color: "#00ccff",
+        amps: {
+          "CXA1200.1": { rms: 1200, ohm: 1, class: "D", spec: "1/0 ga, 150A" },
+          "KX2400.1": { rms: 2400, ohm: 1, class: "D", spec: "1/0 ga, 250A" }
+        },
+        subs: {
+          "CompR 12 D2": { rms: 500, ohm: 1, voice: "Dual 2Ω" },
+          "Solo-Baric L7 15": { rms: 1000, ohm: 2, voice: "Dual 4Ω" }
+        }
+      },
+      "Skar Audio": {
+        trust: 8,
+        color: "#ff66cc",
+        amps: {
+          "RP-1200.1D": { rms: 1200, ohm: 1, class: "D", spec: "4 ga, 120A" },
+          "SKv2-3500.1D": { rms: 3500, ohm: 1, class: "D", spec: "1/0 ga, 300A" }
+        },
+        subs: {
+          "SDR-12 D2": { rms: 600, ohm: 1, voice: "Dual 2Ω" },
+          "EVL-15 D2": { rms: 1250, ohm: 1, voice: "Dual 2Ω" }
+        }
+      }
+    };
+
+    function MatchResult({ amp, sub, ampInfo, subInfo, trust, color, brand }) {
+      const match = ampInfo && subInfo
+        ? ampInfo.rms >= subInfo.rms
+          ? ampInfo.rms > subInfo.rms * 1.5
+            ? "danger"
+            : "safe"
+          : "warn"
+        : null;
+
+      const summary = {
+        safe: "✅ Match looks good. Amp power is in range.",
+        warn: "⚠️ Amp might underpower this sub. Be cautious.",
+        danger: "🔥 Amp likely to overpower sub. Use gain carefully or downgrade amp."
+      };
+
+      return (
+        <div className="match" style={{ borderColor: color }}>
+          <h3>Match Details</h3>
+          <p><strong>Brand:</strong> {brand} <span className="trust-badge">{trust}/10</span></p>
+          <p><strong>Amp:</strong> {amp} — {ampInfo.rms}W @ {ampInfo.ohm}Ω, Class {ampInfo.class} ({ampInfo.spec})</p>
+          <p><strong>Sub:</strong> {sub} — {subInfo.rms}W RMS, {subInfo.voice}</p>
+          <p className={match}>{summary[match]}</p>
+        </div>
+      );
+    }
+
+    function AiudiophixWizard() {
+      const [brand, setBrand] = React.useState("");
+      const [amp, setAmp] = React.useState("");
+      const [sub, setSub] = React.useState("");
+
+      const brandData = brands[brand];
+      const amps = brandData ? Object.keys(brandData.amps) : [];
+      const subs = brandData ? Object.keys(brandData.subs) : [];
+
+      const ampInfo = brandData?.amps?.[amp];
+      const subInfo = brandData?.subs?.[sub];
+      const trust = brandData?.trust;
+      const color = brandData?.color;
+
+      return (
+        <div>
+          <h1>Aiudiophix Match Wizard</h1>
+          <label>Select Brand:</label>
+          <select value={brand} onChange={e => { setBrand(e.target.value); setAmp(""); setSub(""); }}>
+            <option value="">-- Select Brand --</option>
+            {Object.keys(brands).map((b, i) => <option key={i} value={b}>{b}</option>)}
+          </select>
+
+          {brand && (
+            <>
+              <label>Select Amp:</label>
+              <select value={amp} onChange={e => setAmp(e.target.value)}>
+                <option value="">-- Select Amp --</option>
+                {amps.map((a, i) => <option key={i} value={a}>{a}</option>)}
+              </select>
+
+              <label>Select Subwoofer:</label>
+              <select value={sub} onChange={e => setSub(e.target.value)}>
+                <option value="">-- Select Sub --</option>
+                {subs.map((s, i) => <option key={i} value={s}>{s}</option>)}
+              </select>
+            </>
+          )}
+
+          {brand && amp && sub && (
+            <MatchResult
+              amp={amp}
+              sub={sub}
+              ampInfo={ampInfo}
+              subInfo={subInfo}
+              trust={trust}
+              color={color}
+              brand={brand}
+            />
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.render(<AiudiophixWizard />, document.getElementById('root'));
+  </script>
+</body>
+</html>
